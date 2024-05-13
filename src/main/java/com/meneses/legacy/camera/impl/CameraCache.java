@@ -92,4 +92,9 @@ public class CameraCache implements Camera, FullCamera {
     public CameraMedia[] getAllMediaInfo() {
         return camera.getAllMediaInfo();
     }
+
+    @Override
+    public byte[] getMediaBytes(String mediaDir) {
+        return camera.getMediaBytes(mediaDir);
+    }
 }

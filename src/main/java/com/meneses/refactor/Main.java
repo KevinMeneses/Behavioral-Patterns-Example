@@ -81,7 +81,6 @@ public class Main {
                     action = scanner.nextInt();
                     CameraMedia[] medias = ((FullCamera) camera).getAllMediaInfo();
                     VideoPlayer videoPlayer = new VideoPlayer();
-
                     PlaybackStrategy strategy;
 
                     switch (action) {

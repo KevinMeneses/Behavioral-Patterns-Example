@@ -48,4 +48,9 @@ public class AudioRecorderLogger extends VideoRecorderLogger implements Camera, 
     public CameraMedia[] getAllMediaInfo() {
         return camera.getAllMediaInfo();
     }
+
+    @Override
+    public byte[] getMediaBytes(String mediaDir) {
+        return camera.getMediaBytes(mediaDir);
+    }
 }

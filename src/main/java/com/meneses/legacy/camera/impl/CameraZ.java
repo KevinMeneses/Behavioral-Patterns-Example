@@ -189,6 +189,11 @@ public class CameraZ implements Camera, FullCamera {
         return parseToMedia(result);
     }
 
+    @Override
+    public byte[] getMediaBytes(String mediaDir) {
+        return cameraService.getMediaBytes(mediaDir);
+    }
+
     private CameraMedia[] parseToMedia(CameraCommandResult result) {
         return new CameraMedia[]{
                 new CameraMedia("/media/1.mp4", 10),

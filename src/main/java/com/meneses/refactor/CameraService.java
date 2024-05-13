@@ -19,8 +19,6 @@ public class CameraService {
             "/media/4.mp4", new byte[] {28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40}
     );
 
-    private int currentMedia = 0;
-
     public String getToken() {
         return token;
     }
@@ -53,6 +51,5 @@ public class CameraService {
 
     public void startMediaStream(String mediaDir) throws RuntimeException {
         mediaPublisher.notifyChanges(mediaBytes.get(mediaDir));
-        currentMedia++;
     }
 }

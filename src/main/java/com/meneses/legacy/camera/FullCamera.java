@@ -4,4 +4,5 @@ import com.meneses.legacy.camera.model.CameraMedia;
 
 public interface FullCamera extends Camera, ImageRecorder, VideoRecorder, AudioRecorder {
     CameraMedia[] getAllMediaInfo();
+    byte[] getMediaBytes(String mediaDir);
 }

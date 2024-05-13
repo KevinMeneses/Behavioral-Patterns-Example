@@ -1,7 +1,7 @@
 package com.meneses.legacy.videoplayer;
 
-import com.meneses.refactor.camera.FullCamera;
-import com.meneses.refactor.camera.model.CameraMedia;
+import com.meneses.legacy.camera.FullCamera;
+import com.meneses.legacy.camera.model.CameraMedia;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,13 +12,11 @@ public class VideoPlayer {
     private final AtomicInteger currentSecond = new AtomicInteger(0);
     private final AtomicBoolean isPlaying = new AtomicBoolean(false);
     private Thread playbackThread = new Thread();
-    private Listener listener = () -> {
-    };
-
     private CameraMedia media;
     private CameraMedia[] medias;
     private int currentMediaIndex = 0;
     private PlaybackType playbackType;
+    private boolean stoppedByUser = false;
 
     public VideoPlayer(FullCamera camera) {
         this.camera = camera;
@@ -42,7 +40,7 @@ public class VideoPlayer {
         }
     }
 
-    public void startPlayback() {
+    private void startPlayback(byte[] bytes) {
         buffer = bytes;
         isPlaying.set(true);
         playbackThread = null;
@@ -60,14 +58,29 @@ public class VideoPlayer {
             buffer = null;
             isPlaying.set(false);
             currentSecond.set(0);
-            listener.onFinished();
+            onFinished();
         });
 
         playbackThread.start();
     }
 
-    public int getCurrentSecond() {
-        return currentSecond.get();
+    private void onFinished() {
+        if (stoppedByUser) {
+            stoppedByUser = false;
+            return;
+        }
+        if (playbackType == PlaybackType.SINGLE_VIDEO) {
+            System.out.println("Playback finished");
+            stopPlayback();
+            return;
+        }
+        if (currentMediaIndex < medias.length - 1) {
+            currentMediaIndex++;
+            startMediaStream();
+        } else {
+            System.out.println("Playback finished");
+            stopPlayback();
+        }
     }
 
     public void pausePlayback() {
@@ -81,7 +94,12 @@ public class VideoPlayer {
     }
 
     public void stopPlayback() {
-        System.out.println("Playback stopped");
+        if (!isMediaLoaded()) {
+            System.out.println("Progress reset");
+        } else {
+            System.out.println("Playback stopped");
+        }
+
         playbackThread.interrupt();
         isPlaying.set(false);
         buffer = null;
@@ -99,14 +117,14 @@ public class VideoPlayer {
         }
         if (playbackType == PlaybackType.MULTIPLE_AS_ONE) {
             System.out.println("Forward 10 seconds");
-
+            setProgressForMultipleAsOne(currentSecond.get() + 10);
         }
     }
 
     public void rewind() {
         if (playbackType == PlaybackType.SINGLE_VIDEO) {
             System.out.println("Rewind 5 seconds");
-            currentSecond.set(currentSecond.get() - 5);
+            setProgress(currentSecond.get() - 5);
         }
         if (playbackType == PlaybackType.PLAYLIST) {
             System.out.println("Previous video");
@@ -114,7 +132,7 @@ public class VideoPlayer {
         }
         if (playbackType == PlaybackType.MULTIPLE_AS_ONE) {
             System.out.println("Rewind 10 seconds");
-
+            setProgressForMultipleAsOne(currentSecond.get() - 10);
         }
     }
 
@@ -122,11 +140,45 @@ public class VideoPlayer {
         currentSecond.set(second);
     }
 
-    public void setEventListener(Listener listener) {
-        this.listener = listener;
+    public void setProgressForMultipleAsOne(int second) {
+        int currentDuration = 0;
+        int tmpCurrentMediaIndex = 0;
+
+        for (CameraMedia media : medias) {
+            currentDuration += media.duration;
+            if (second > currentDuration) {
+                tmpCurrentMediaIndex++;
+                System.out.println("Next video section");
+            } else {
+                if (currentMediaIndex > tmpCurrentMediaIndex) {
+                    System.out.println("Previous video section");
+                    currentMediaIndex = tmpCurrentMediaIndex;
+                } else {
+                    setProgress(second);
+                    return;
+                }
+            }
+        }
+
+        stopPlayback();
+        startMediaStream();
+        setProgress(second);
     }
 
-    public interface Listener {
-        void onFinished();
+    public void startMediaStream() {
+        try {
+            byte [] mediaBytes = null;
+            while (mediaBytes == null) {
+                if (playbackType == PlaybackType.SINGLE_VIDEO) {
+                    mediaBytes = camera.getMediaBytes(media.dir);
+                } else {
+                    mediaBytes = camera.getMediaBytes(medias[currentMediaIndex].dir);
+                }
+                Thread.sleep(1000);
+            }
+            startPlayback(mediaBytes);
+        } catch (InterruptedException ignored) {
+
+        }
     }
 }

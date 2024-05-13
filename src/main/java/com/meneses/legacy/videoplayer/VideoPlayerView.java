@@ -4,12 +4,13 @@ import com.meneses.legacy.camera.FullCamera;
 
 public class VideoPlayerView {
     private final VideoPlayer videoPlayer;
-    private final FullCamera camera;
-    private Boolean isLocked = false;
-    public VideoPlayerView(VideoPlayer videoPlayer, FullCamera camera) {
+
+    public VideoPlayerView(VideoPlayer videoPlayer) {
         this.videoPlayer = videoPlayer;
-        this.camera = camera;
     }
+
+    private Boolean isLocked = false;
+    private Boolean isPlaying = false;
 
     public void showLockedScreen() {
         System.out.println("----Screen Locked----");
@@ -24,7 +25,18 @@ public class VideoPlayerView {
             showLockedScreen();
             return;
         }
-        videoPlayer.startPlayback();
+
+        if (videoPlayer.isMediaLoaded()) {
+            if (isPlaying) {
+                isPlaying = false;
+                videoPlayer.pausePlayback();
+            } else {
+                isPlaying = true;
+                videoPlayer.resumePlayback();
+            }
+        } else {
+            videoPlayer.startMediaStream();
+        }
     }
 
     public void clickStop() {
@@ -32,6 +44,8 @@ public class VideoPlayerView {
             showLockedScreen();
             return;
         }
+
+        isPlaying = false;
         videoPlayer.stopPlayback();
         toggleLockButton(false);
     }
