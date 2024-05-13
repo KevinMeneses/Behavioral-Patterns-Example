@@ -3,18 +3,13 @@ package com.meneses.refactor.camera.impl;
 import com.meneses.refactor.CameraService;
 import com.meneses.refactor.camera.Camera;
 import com.meneses.refactor.camera.FullCamera;
-import com.meneses.refactor.camera.model.CameraCommand;
-import com.meneses.refactor.camera.model.CameraCommandResult;
-import com.meneses.refactor.camera.model.CameraFile;
-import com.meneses.refactor.camera.model.CameraFileMetadata;
-import com.meneses.refactor.media.MediaPublisher;
+import com.meneses.refactor.camera.model.*;
 import com.meneses.refactor.media.MediaSubscriber;
 
 import java.util.List;
 
 public class CameraZ implements Camera, FullCamera {
     private final CameraService cameraService;
-    private final MediaPublisher mediaPublisher = new MediaPublisher();
 
     public CameraZ(CameraService cameraService) {
         this.cameraService = cameraService;
@@ -180,36 +175,38 @@ public class CameraZ implements Camera, FullCamera {
     }
 
     @Override
+    public CameraMedia[] getAllMediaInfo() {
+        CameraCommand command = new CameraCommand.Builder()
+                .setToken(cameraService.getToken())
+                .setCode(99)
+                .setInformation("media")
+                .build();
+
+        CameraCommandResult result = cameraService.sendCommand(command);
+        return parseToMedia(result);
+    }
+
+    private CameraMedia[] parseToMedia(CameraCommandResult result) {
+        return new CameraMedia[]{
+                new CameraMedia("/media/1.mp4", 10),
+                new CameraMedia("/media/2.mp4", 9),
+                new CameraMedia("/media/3.mp4", 8),
+                new CameraMedia("/media/4.mp4", 13)
+        };
+    }
+
+    @Override
     public void subscribeToMedia(MediaSubscriber subscriber) {
-        mediaPublisher.subscribe(subscriber);
+        cameraService.subscribeToMedia(subscriber);
     }
 
     @Override
     public void unsubscribeToMedia(MediaSubscriber subscriber) {
-        mediaPublisher.unsubscribe(subscriber);
+        cameraService.unsubscribeToMedia(subscriber);
     }
 
     @Override
     public void startMediaStream(String mediaDir) throws RuntimeException {
-        byte[][] bytes = {
-                {1, 2, 3, 4, 5},
-                {6, 7, 8, 9, 10},
-                {11, 12, 13, 14, 15}
-        };
-
-        for (byte[] data : bytes) {
-            new Thread() {
-                @Override
-                public void run() {
-                    super.run();
-                    try {
-                        sleep(5000);
-                        mediaPublisher.notifyChanges(data);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            };
-        }
+        cameraService.startMediaStream(mediaDir);
     }
 }

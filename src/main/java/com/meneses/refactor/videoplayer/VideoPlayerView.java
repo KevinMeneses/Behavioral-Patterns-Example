@@ -12,17 +12,16 @@ public class VideoPlayerView {
         this.strategy = strategy;
     }
 
-
     public void setState(VideoPlayerState state) {
         this.state = state;
     }
 
     public void showLockedScreen() {
-
+        System.out.println("----Screen Locked----");
     }
 
     public void hideLockedScreen() {
-
+        System.out.println("----Screen unlocked----");
     }
 
     public void clickPlay() {
@@ -50,6 +49,10 @@ public class VideoPlayerView {
     }
 
     public void toggleLockButton(Boolean enabled) {
-
+        if (enabled) {
+            System.out.println("Lock button enabled");
+        } else {
+            System.out.println("Lock button disabled");
+        }
     }
 }

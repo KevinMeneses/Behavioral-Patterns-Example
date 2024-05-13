@@ -2,19 +2,20 @@ package com.meneses.legacy.camera.decorator;
 
 import com.meneses.legacy.camera.AudioRecorder;
 import com.meneses.legacy.camera.Camera;
-import com.meneses.legacy.camera.VideoRecorder;
 import com.meneses.legacy.camera.model.CameraFile;
 import com.meneses.legacy.camera.model.CameraFileMetadata;
 import com.meneses.legacy.logger.Logger;
+import com.meneses.legacy.camera.FullCamera;
+import com.meneses.legacy.camera.model.CameraMedia;
 
 import java.util.List;
 
-public class AudioRecorderLogger extends VideoRecorderLogger implements Camera, AudioRecorder {
-    private final AudioRecorder camera;
+public class AudioRecorderLogger extends VideoRecorderLogger implements Camera, AudioRecorder, FullCamera {
+    private final FullCamera camera;
     private final Logger logger;
 
-    public AudioRecorderLogger(AudioRecorder camera, Logger logger) {
-        super((VideoRecorder) camera, logger);
+    public AudioRecorderLogger(FullCamera camera, Logger logger) {
+        super(camera, logger);
         this.camera = camera;
         this.logger = logger;
     }
@@ -41,5 +42,10 @@ public class AudioRecorderLogger extends VideoRecorderLogger implements Camera, 
         Boolean isSuccess = camera.stopAudioRecording();
         logger.logEvent("stopAudioRecording", isSuccess.toString());
         return isSuccess;
+    }
+
+    @Override
+    public CameraMedia[] getAllMediaInfo() {
+        return camera.getAllMediaInfo();
     }
 }

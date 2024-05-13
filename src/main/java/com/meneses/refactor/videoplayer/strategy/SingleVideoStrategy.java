@@ -1,27 +1,33 @@
 package com.meneses.refactor.videoplayer.strategy;
 
-import com.meneses.refactor.camera.impl.CameraZ;
-import com.meneses.refactor.media.MediaSubscriber;
+import com.meneses.refactor.camera.FullCamera;
+import com.meneses.refactor.camera.model.CameraMedia;
 import com.meneses.refactor.videoplayer.VideoPlayer;
 
-public class SingleVideoStrategy implements PlaybackStrategy, MediaSubscriber {
-    public final VideoPlayer videoPlayer;
-    private final CameraZ camera;
-    private String mediaDir;
+public class SingleVideoStrategy extends PlaybackBaseStrategy {
+    private CameraMedia media;
+    private boolean stoppedByUser = false;
 
-    public SingleVideoStrategy(VideoPlayer videoPlayer, CameraZ camera) {
-        this.videoPlayer = videoPlayer;
-        this.camera = camera;
+    public SingleVideoStrategy(VideoPlayer videoPlayer, FullCamera camera) {
+        super(videoPlayer, camera);
+        setOnFinishedListener();
     }
 
-    public void setMedia(String mediaDir) {
+    private void setOnFinishedListener() {
+        videoPlayer.setEventListener(() -> {
+            // on finished
+            if (stoppedByUser) {
+                stoppedByUser = false;
+                return;
+            }
+            System.out.println("Playback finished");
+            videoPlayer.stopPlayback();
+        });
+    }
+
+    public void setMedia(CameraMedia media) {
         camera.subscribeToMedia(this);
-        this.mediaDir = mediaDir;
-    }
-
-    @Override
-    public void updateBuffer(byte[] bytes) {
-        videoPlayer.startPlayback(bytes);
+        this.media = media;
     }
 
     @Override
@@ -30,7 +36,8 @@ public class SingleVideoStrategy implements PlaybackStrategy, MediaSubscriber {
             videoPlayer.resumePlayback();
         } else {
             try {
-                camera.startMediaStream(mediaDir);
+                System.out.println("Playback started");
+                camera.startMediaStream(media.dir);
             } catch (RuntimeException e) {
                 camera.unsubscribeToMedia(this);
             }
@@ -38,27 +45,14 @@ public class SingleVideoStrategy implements PlaybackStrategy, MediaSubscriber {
     }
 
     @Override
-    public void pausePlayback() {
-        videoPlayer.pausePlayback();
-    }
-
-    @Override
-    public void stopPlayback() {
-        videoPlayer.stopPlayback();
-    }
-
-    @Override
     public void forward() {
-        videoPlayer.setProgress(videoPlayer.getCurrentPosition() + 5);
+        System.out.println("Forward 5 seconds");
+        videoPlayer.setProgress(videoPlayer.getCurrentSecond() + 5);
     }
 
     @Override
     public void rewind() {
-        videoPlayer.setProgress(videoPlayer.getCurrentPosition() - 5);
-    }
-
-    @Override
-    public void setProgress(int second) {
-        videoPlayer.setProgress(second);
+        System.out.println("Rewind 5 seconds");
+        videoPlayer.setProgress(videoPlayer.getCurrentSecond() - 5);
     }
 }

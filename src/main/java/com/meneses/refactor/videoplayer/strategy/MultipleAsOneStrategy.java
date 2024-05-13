@@ -1,34 +1,38 @@
 package com.meneses.refactor.videoplayer.strategy;
 
-import com.meneses.refactor.camera.impl.CameraZ;
-import com.meneses.refactor.media.MediaSubscriber;
+import com.meneses.refactor.camera.FullCamera;
+import com.meneses.refactor.camera.model.CameraMedia;
 import com.meneses.refactor.videoplayer.VideoPlayer;
 
-public class MultipleAsOneStrategy implements PlaybackStrategy, MediaSubscriber {
-    public final VideoPlayer videoPlayer;
-    private final CameraZ camera;
-    private String[] mediaDirs;
+public class MultipleAsOneStrategy extends PlaybackBaseStrategy {
+    private CameraMedia[] medias;
     private int currentMediaIndex = 0;
 
-    public MultipleAsOneStrategy(VideoPlayer videoPlayer, CameraZ camera) {
-        this.videoPlayer = videoPlayer;
-        this.camera = camera;
+    public MultipleAsOneStrategy(VideoPlayer videoPlayer, FullCamera camera) {
+        super(videoPlayer, camera);
+        setOnFinishedListener();
     }
 
-    public void setMedia(String[] mediaDir) {
-        camera.subscribeToMedia(this);
-        this.mediaDirs = mediaDir;
-    }
-
-    @Override
-    public void updateBuffer(byte[] bytes) {
-        videoPlayer.startPlayback(bytes);
-        videoPlayer.setListener(() -> {
-            if (currentMediaIndex < mediaDirs.length - 1) {
+    private void setOnFinishedListener() {
+        videoPlayer.setEventListener(() -> {
+            // on finished
+            if (stoppedByUser) {
+                stoppedByUser = false;
+                return;
+            }
+            if (currentMediaIndex < medias.length - 1) {
                 currentMediaIndex++;
-                startPlayback();
+                startMediaStream();
+            } else {
+                System.out.println("Playback finished");
+                videoPlayer.stopPlayback();
             }
         });
+    }
+
+    public void setMedias(CameraMedia[] medias) {
+        camera.subscribeToMedia(this);
+        this.medias = medias;
     }
 
     @Override
@@ -36,45 +40,60 @@ public class MultipleAsOneStrategy implements PlaybackStrategy, MediaSubscriber 
         if (videoPlayer.isMediaLoaded()) {
             videoPlayer.resumePlayback();
         } else {
-            try {
-                camera.startMediaStream(mediaDirs[currentMediaIndex]);
-            } catch (RuntimeException e) {
-                camera.unsubscribeToMedia(this);
-            }
+            System.out.println("Playback started");
+            startMediaStream();
+        }
+    }
+
+    private void startMediaStream() {
+        try {
+            camera.startMediaStream(medias[currentMediaIndex].dir);
+        } catch (RuntimeException e) {
+            camera.unsubscribeToMedia(this);
         }
     }
 
     @Override
-    public void pausePlayback() {
-        videoPlayer.pausePlayback();
-    }
-
-    @Override
     public void stopPlayback() {
-        videoPlayer.stopPlayback();
+        super.stopPlayback();
         currentMediaIndex = 0;
     }
 
     @Override
     public void forward() {
-        if (currentMediaIndex < mediaDirs.length - 1) {
-            currentMediaIndex++;
-            videoPlayer.stopPlayback();
-            startPlayback();
-        }
+        System.out.println("Forward 10 seconds");
+        setProgress(videoPlayer.getCurrentSecond() + 10);
     }
 
     @Override
     public void rewind() {
-        if (currentMediaIndex > 0) {
-            currentMediaIndex--;
-            videoPlayer.stopPlayback();
-            startPlayback();
-        }
+        System.out.println("Rewind 10 seconds");
+        setProgress(videoPlayer.getCurrentSecond() - 10);
     }
 
     @Override
     public void setProgress(int second) {
+        int currentDuration = 0;
+        int tmpCurrentMediaIndex = 0;
 
+        for (CameraMedia media: medias) {
+            currentDuration += media.duration;
+            if (second > currentDuration) {
+                tmpCurrentMediaIndex++;
+                System.out.println("Next video section");
+            } else {
+                if (currentMediaIndex > tmpCurrentMediaIndex) {
+                    System.out.println("Previous video section");
+                    currentMediaIndex = tmpCurrentMediaIndex;
+                } else {
+                    videoPlayer.setProgress(second);
+                    return;
+                }
+            }
+        }
+
+        super.stopPlayback();
+        startMediaStream();
+        videoPlayer.setProgress(second);
     }
 }

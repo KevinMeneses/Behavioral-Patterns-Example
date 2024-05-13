@@ -7,6 +7,7 @@ import com.meneses.legacy.camera.model.CameraCommand;
 import com.meneses.legacy.camera.model.CameraCommandResult;
 import com.meneses.legacy.camera.model.CameraFile;
 import com.meneses.legacy.camera.model.CameraFileMetadata;
+import com.meneses.legacy.camera.model.CameraMedia;
 
 import java.util.List;
 
@@ -174,5 +175,26 @@ public class CameraZ implements Camera, FullCamera {
 
     private String parseToString(CameraFileMetadata metadata) {
         return "";
+    }
+
+    @Override
+    public CameraMedia[] getAllMediaInfo() {
+        CameraCommand command = new CameraCommand.Builder()
+                .setToken(cameraService.getToken())
+                .setCode(99)
+                .setInformation("media")
+                .build();
+
+        CameraCommandResult result = cameraService.sendCommand(command);
+        return parseToMedia(result);
+    }
+
+    private CameraMedia[] parseToMedia(CameraCommandResult result) {
+        return new CameraMedia[]{
+                new CameraMedia("/media/1.mp4", 10),
+                new CameraMedia("/media/2.mp4", 9),
+                new CameraMedia("/media/3.mp4", 8),
+                new CameraMedia("/media/4.mp4", 13)
+        };
     }
 }

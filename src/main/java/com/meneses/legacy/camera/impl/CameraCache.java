@@ -5,6 +5,7 @@ import com.meneses.legacy.camera.Camera;
 import com.meneses.legacy.camera.FullCamera;
 import com.meneses.legacy.camera.model.CameraFile;
 import com.meneses.legacy.camera.model.CameraFileMetadata;
+import com.meneses.legacy.camera.model.CameraMedia;
 
 import java.util.List;
 
@@ -85,5 +86,10 @@ public class CameraCache implements Camera, FullCamera {
     @Override
     public Boolean stopVideoRecording() {
         return camera.stopVideoRecording();
+    }
+
+    @Override
+    public CameraMedia[] getAllMediaInfo() {
+        return camera.getAllMediaInfo();
     }
 }

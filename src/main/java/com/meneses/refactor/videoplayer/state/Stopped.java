@@ -18,12 +18,13 @@ public class Stopped implements VideoPlayerState {
 
     @Override
     public void clickStop() {
+        System.out.println("Progress reset");
         videoPlayerView.strategy.setProgress(0);
     }
 
     @Override
     public void clickLock() {
-        // disabled when stopped
+        System.out.println("Option not available while stopped");
     }
 
     @Override

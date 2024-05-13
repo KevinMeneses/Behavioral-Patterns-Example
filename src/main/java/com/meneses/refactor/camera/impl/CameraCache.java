@@ -5,6 +5,7 @@ import com.meneses.refactor.camera.Camera;
 import com.meneses.refactor.camera.FullCamera;
 import com.meneses.refactor.camera.model.CameraFile;
 import com.meneses.refactor.camera.model.CameraFileMetadata;
+import com.meneses.refactor.camera.model.CameraMedia;
 import com.meneses.refactor.media.MediaSubscriber;
 
 import java.util.List;
@@ -101,5 +102,10 @@ public class CameraCache implements Camera, FullCamera {
     @Override
     public void startMediaStream(String mediaDir) throws RuntimeException {
         camera.startMediaStream(mediaDir);
+    }
+
+    @Override
+    public CameraMedia[] getAllMediaInfo() {
+        return camera.getAllMediaInfo();
     }
 }
